@@ -101,15 +101,17 @@ data_percentage <- apply(comMD_M, 2, function(x){x*100/sum(x,na.rm=T)})
 data_percentage <- data.frame(round(data_percentage,1))
 data_percentage<-data_percentage[rev(rownames(data_percentage)), ]
 data_pmatrix <- as.matrix(data_percentage)
+
 theplot<-barplot(data_pmatrix,
                  main = "Players Decision on Measure Combinations",
                  xlab = "Measure Combinations",col = coul)
-legend("bottomleft",
+legend(x=ncol(data_pmatrix),
+       y=max(colSums(data_pmatrix)),
+       bty = "n",
        c("Resist","Accept"),
-       fill = coul
-)
-text(theplot, 35, labels=data_pmatrix[1,], col="black")
-text(theplot, 90, labels=data_pmatrix[2,], col="black")
+       fill = coul)
+text(theplot, 15, labels=data_pmatrix[1,], col="black")
+text(theplot, 60, labels=data_pmatrix[2,], col="black")
 chisq.test(combMD_$combM_, combMD_$combD_)
 
 
