@@ -96,11 +96,35 @@ comMD_M <- table(combMD_$combM_, combMD_$combD_)
 comMD_M<-comMD_M[-c(4, 7, 8, 10, 11, 12), ]
 
 comMD_M<-t(comMD_M)
+combD[combD== "LA"] <- "AL"
+combD[combD== "TA"] <- "AT"
+combD[combD== "SA"] <- "AS"
+combD[combD== "TL"] <- "LT"
+combD[combD== "SL"] <- "LS"
+combD[combD== "TS"] <- "ST"
+combD$AL <- rowSums(combD=="AL")
+combD$AS <- rowSums(combD=="AS")
+combD$AT <- rowSums(combD=="AT")
+combD$LS <- rowSums(combD=="LS")
+combD$LT <- rowSums(combD=="LT")
+combD$ST <- rowSums(combD=="ST")
 # Transform this data in %
 data_percentage <- apply(comMD_M, 2, function(x){x*100/sum(x,na.rm=T)})
 data_percentage <- data.frame(round(data_percentage,1))
 data_percentage<-data_percentage[rev(rownames(data_percentage)), ]
 data_pmatrix <- as.matrix(data_percentage)
+
+combinationMeasures <- comMD_M
+combinationMeasures=data.frame(Total=apply(combinationMeasures,2,sum))
+combinationMeasures$Measures=rownames(combinationMeasures)
+ggplot(data=combinationMeasures, aes(x=Measures, y=Total, fill=Measures)) +
+        geom_bar(colour="black", stat="identity")+
+        scale_fill_discrete(name="Measure Combination",
+                            breaks=c("AL", "AS", "AT", "LS", "LT", "ST"),
+                            labels=c("Awareness/Lockdown", "Awarness/Survey", "Awarness/Testing", "Lockdown/Surveillance",
+                                     "Lockdown/Testing", "Survurveillance/Testing"))+
+        geom_text(aes(label = Total), position = position_stack(vjust = 0.5))
+
 
 theplot<-barplot(data_pmatrix,
                  main = "Players Decision on Measure Combinations",
@@ -131,8 +155,9 @@ decision$w9yd <- substr(decision$sequence, 36, 36)
 decision$w9zd <- substr(decision$sequence, 39, 39)
 
 ##Summ up player decisions
-decision$accept <- rowSums(decision=="A")
 decision$resist <- rowSums(decision=="R")
+decision$accept <- rowSums(decision=="A")
+
 
 ###Government Measures sequence of measures, T for testing, A for awareness, S for surveillance, L for lockdown
 ###the decisions of weach week is split into two separate columns for each week
@@ -199,97 +224,81 @@ governmentM <- decision[30:33]
 drops <- c("accept","resist","lockdown","testing","awareness","surveillance")
 sequence <- decision[ , !(names(decision) %in% drops)]
 
-
 playerDS=data.frame(value=apply(playerD,2,sum))
 playerDS$key=rownames(playerDS)
-ggplot(data=playerDS, aes(x=key, y=value, fill=key)) +
-        geom_bar(colour="black", stat="identity")
+colnames(playerDS) <- c("Count", "Decision")
+
+ggplot(data=playerDS, aes(x=Decision, y=Count, fill=Decision)) +
+        geom_bar(colour="black", stat="identity")+
+        geom_text(aes(label = Count), position = position_stack(vjust = 0.5))
 
 governmentMS=data.frame(value=apply(governmentM,2,sum))
 governmentMS$key=rownames(governmentMS)
-ggplot(data=governmentMS, aes(x=key, y=value, fill=key)) +
-        geom_bar(colour="black", stat="identity")
+colnames(governmentMS) <- c("Count", "Measure")
+ggplot(data=governmentMS, aes(x=Measure, y=Count, fill=Measure)) +
+        geom_bar(colour="black", stat="identity")+
+        geom_text(aes(label = Count), position = position_stack(vjust = 0.5))
 ################
 # Boxplot of Decisions and Measures
 ###############
-boxplot(playerD$accept,data=playerD, main="Player's Accept Decision",
-        xlab="Decision",col = ("Red"), ylab="Number of Decisions",ylim=c(0,13))
-boxplot(playerD$resist,data=playerD, main="Player's Resist Decision",
-        xlab="Decision", ylab="Number of Measures",col = coul, ylim=c(0,13))
-boxplot(governmentM$surveillance,data=governmentM, main="Government Surveillance Measure",
-        xlab="Measure",col = ("Red"), ylab="Number of Measures", ylim=c(0,13))
-boxplot(governmentM$lockdown,data=governmentM, main="Government Lockdown Measure",
-        xlab="Measure", ylab="Number of Measures",col = ("Red"), ylim=c(0,13))
-boxplot(governmentM$testing,data=governmentM, main="Government Testing Measure",
+boxplot(playerD[,1:2],data=playerD, main="Player's Decision",
+        xlab="Decision",col = coul, ylab="Number of Decisions",ylim=c(0,13))
+boxplot(governmentM[,1:4],data=governmentM, main="Government Measures",
         xlab="Measure",col = coul, ylab="Number of Measures", ylim=c(0,13))
-boxplot(governmentM$awareness,data=governmentM, main="Government Awarness Measure",
-        xlab="Measure", ylab="Number of Measures",col = coul, ylim=c(0,13))
+
+boxplot(sequence$score~playerD$accept, 
+        main="PLayer's score per times they accept", 
+        xlab="Number of accepts", ylab="Score")
+
+par(mfrow=c(2,2))
+boxplot(sequence$score~governmentM$surveillance, 
+        main="Surveillance measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~governmentM$testing, 
+        main="Testing measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~governmentM$lockdown, 
+        main="Lockdown measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~governmentM$awareness, 
+        main="Awareness measure", 
+        xlab="Occurance of Measure", ylab="Score")
+
+par(mfrow=c(2,3))
+boxplot(sequence$score~combD$LT, 
+        main="Lockdown and Testing measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~combD$LS, 
+        main="Lockdown and Surveillance measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~combD$ST, 
+        main="Surveillance and Testing measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~combD$AT, 
+        main="Awareness and Testing measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~combD$AL, 
+        main="Awareness and Lockdown measure", 
+        xlab="Occurance of Measure", ylab="Score")
+boxplot(sequence$score~combD$AS, 
+        main="Awareness and Surveillance measure", 
+        xlab="Occurance of Measure", ylab="Score")
+
+par(mfrow=c(1,1))
 #############
 # Boxplot of Scores
 ##############
 boxplot(sequence$score,data=playerD, main="Player's Scores",
         xlab="Score",col = ("Yellow"), ylab="Number of Decisions")
 summary(sequence$score)
-###########
-#Coorelations
-###########
-cor(governmentM, playerD,  method = "pearson", use = "complete.obs")
-
-cor.test(governmentM$surveillance, playerD$accept, method = c("pearson"))
-cor.test(governmentM$surveillance, playerD$resist, method = c("pearson"))
-cor.test(governmentM$lockdown, playerD$accept, method = c("pearson"))
-cor.test(governmentM$lockdown, playerD$resist, method = c("pearson"))
-cor.test(governmentM$testing, playerD$accept, method = c("pearson"))
-cor.test(governmentM$testing, playerD$resist, method = c("pearson"))
-cor.test(governmentM$awareness, playerD$accept, method = c("pearson"))
-cor.test(governmentM$awareness, playerD$resist, method = c("pearson"))
-
 dandm <- cbind(governmentM, playerD)
 ##########################
-#shapiro.test(sequence$score)
-##Shapiro test, consider removing it
-#####################
-shapiro.test(dandm$resist)
-qqnorm(dandm$resist)
-ggqqplot(dandm$resist, ylab = "Resist")
-
-shapiro.test(dandm$accept)
-qqnorm(dandm$accept)
-ggqqplot(dandm$accept, ylab = "Accept")
-
-shapiro.test(dandm$surveillance)
-qqnorm(dandm$surveillance)
-ggqqplot(dandm$surveillance, ylab = "Surveillance")
-
-shapiro.test(dandm$lockdown)
-qqnorm(dandm$lockdown)
-ggqqplot(dandm$lockdown, ylab = "Lockdown")
-
-shapiro.test(dandm$testing)
-qqnorm(dandm$testing)
-ggqqplot(dandm$testing, ylab = "Testing")
-
-shapiro.test(dandm$awareness)
-qqnorm(dandm$awareness)
-ggqqplot(dandm$awareness, ylab = "Awareness")
-
-ggscatter(dandm, x = "surveillance", y = "resist",
-          add = "reg.line", conf.int = TRUE,
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Number of Surveillance", ylab = "Number of Resist")
-ggscatter(dandm, x = "lockdown", y = "resist",
-          add = "reg.line", conf.int = TRUE,
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Number of Lockdown", ylab = "Number of Resist")
-ggscatter(dandm, x = "testing", y = "resist",
-          add = "reg.line", conf.int = TRUE,
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Number of Testing", ylab = "Number of Resist")
-ggscatter(dandm, x = "awareness", y = "resist",
-          add = "reg.line", conf.int = TRUE,
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Number of Awareness", ylab = "Number of Resist")
-
+#IMPORTANT TO ASK#
+#########
+shapiro.test(sequence$score)
+qqnorm(sequence$score)
+ggqqplot(sequence$score, ylab = "Score")
+hist(sequence$score, main="Histogram of scores")
 ######################
 #Age Category
 ########
@@ -316,6 +325,7 @@ myvars <- c('Coun')
 countries <- data[myvars]
 
 countries$Coun[countries$Coun=="Palestine "] <-"Levant and Egypt"
+countries$Coun[countries$Coun=="Syria"] <-"Levant and Egypt"
 countries$Coun[countries$Coun=='"Israel" '] <-"Levant and Egypt"
 countries$Coun[countries$Coun=="United States"] <-"Europe and NA"
 countries$Coun[countries$Coun=="Jordan "] <-"Levant and Egypt"
@@ -354,7 +364,7 @@ theplot<-barplot(countries_count,
 text(theplot, countries_count-2 , paste(round(countries_count/sum(countries_count)*100,1), "%") ,cex=1)
 
 
-table(countries$Coun, sequence$score)
+
 #######IMPORTANT: calculate average score of regions#####
 test_table <- cbind(countries$Coun, as.numeric(sequence$score))
 chisq.test(table(countries$Coun, sequence$score))
@@ -377,11 +387,37 @@ theplot<-barplot(response_count,
                  main="How is the COVID-19 response in your country?",
                  xlab="Response",
                  ylab="Count",
-                 ylim=c(0,30),
+                 ylim=c(0,15),
                  col = coul)
-text(theplot, response_count-2 , paste(round(response_count/sum(response_count)*100,1), "%") ,cex=1)
-table(countries$Coun, response$s1q2)
-chisq.test(table(countries$Coun, response$s1q2))
+text(theplot, response_count-2 , paste(response_count, "\n(",round(response_count/sum(response_count)*100,1),"%)") ,cex=1)
+
+d <- data.frame(countries$Coun, response$s1q2, stringsAsFactors = FALSE)
+e<-table(d)
+d$response.s1q2[d$response.s1q2=="5_Bad"] <-1
+d$response.s1q2[d$response.s1q2=="4_Less than average"] <-2
+d$response.s1q2[d$response.s1q2=="3_Average"] <-3
+d$response.s1q2[d$response.s1q2=="2_Good"] <-4
+d$response.s1q2[d$response.s1q2=="1_Excellent"] <-5
+d$response.s1q2<-as.numeric(d$response.s1q2)
+Asia <- d[d$countries.Coun =="Asia", ]
+Levant <- d[d$countries.Coun =="Levant and Egypt", ]
+Europe <- d[d$countries.Coun =="Europe and NA", ] 
+
+summary(Asia)
+summary(Europe)
+summary(Levant)
+summary(d)
+par(mfrow=c(2,2))
+boxplot(Asia[,2:2], data=Asia, main = "Asia",
+        xlab = "Asia", col = coul , ylim=c(1,5))
+boxplot(Europe[,2:2], data=Europe, main = "Europe and NA",
+        xlab = "Europe", col = coul , ylim=c(1,5))
+boxplot(Levant[,2:2], data=Levant, main = "Levant and Egypt",
+        xlab = "Levant", col = coul , ylim=c(1,5))
+boxplot(d[,2:2], data=d, main = "All",
+        xlab = "All", col = "Purple" , ylim=c(1,5))
+chisq.test(e)
+par(mfrow=c(1,1))
 ######################
 #Situation
 ################
@@ -399,11 +435,37 @@ theplot<-barplot(situation_count,
                  main="How is the situation in your country?",
                  xlab="Situation",
                  ylab="Count",
-                 ylim=c(0,30),
+                 ylim=c(0,25),
                  col = coul)
-text(theplot, situation_count-1 , paste(round(situation_count/sum(situation_count)*100,1), "%") ,cex=1)
-table(countries$Coun, situation$s1q3)
-chisq.test(table(countries$Coun, situation$s1q3))
+text(theplot, situation_count-1.55 , paste(situation_count, "\n(",round(situation_count/sum(situation_count)*100,1),"%)") ,cex=1)
+
+
+d <- data.frame(countries$Coun, situation$s1q3, stringsAsFactors = FALSE)
+e<-table(d)
+d$situation.s1q3[d$situation.s1q3=="5_Very Bad"] <-1
+d$situation.s1q3[d$situation.s1q3=="4_Bad"] <-2
+d$situation.s1q3[d$situation.s1q3=="3_Not Bad"] <-3
+d$situation.s1q3[d$situation.s1q3=="2_Manageable"] <-4
+d$situation.s1q3[d$situation.s1q3=="1_Under full control"] <-5
+d$situation.s1q3 <-as.numeric(d$situation.s1q3)
+Asia <- d[d$countries.Coun =="Asia", ]
+Levant <- d[d$countries.Coun =="Levant and Egypt", ]
+Europe <- d[d$countries.Coun =="Europe and NA", ] 
+
+summary(Asia)
+summary(Europe)
+summary(Levant)
+summary(d)
+par(mfrow=c(2,2))
+boxplot(Asia[,2:2], data=Asia, main = "Asia",
+        xlab = "Asia", col = coul , ylim=c(1,5))
+boxplot(Europe[,2:2], data=Europe, main = "Europe and NA",
+        xlab = "Europe", col = coul , ylim=c(1,5))
+boxplot(Levant[,2:2], data=Levant, main = "Levant and Egypt",
+        xlab = "Levant", col = coul , ylim=c(1,5))
+boxplot(d[,2:2], data=d, main = "All",
+        xlab = "All", col = "Purple" , ylim=c(1,5))
+chisq.test(e)
 ######################
 #Blame
 ##############
@@ -411,15 +473,15 @@ myvars <- c('s1q4')
 blame <- data[myvars]
 blame_count<- table(blame)
 par(mar = rep(2, 4))
+par(mfrow=c(1,1))
 theplot<-barplot(blame_count,
                  main="Who do you blame for the crisis?",
                  xlab="Blame",
                  ylab="Count",
                  ylim=c(0,30),
                  col = coul)
-text(theplot, blame_count-2 , paste(round(blame_count/sum(blame_count)*100,1), "%") ,cex=1)
-table(countries$Coun, blame$s1q4)
-chisq.test(table(countries$Coun, blame$s1q4))
+text(theplot, blame_count-2 , paste(blame_count, "\n(",round(blame_count/sum(blame_count)*100,1),"%)") ,cex=1)
+
 ###################
 #Game Story (Playability) Experience
 #############################
@@ -441,10 +503,11 @@ experienceP$s4q4[experienceP$s4q4=='zero'] <-0
 experienceP$s4q4[experienceP$s4q4=='one'] <-1
 experienceP$s2q3<-as.numeric(experienceP$s2q3)
 experienceP$s4q4 <-as.numeric(experienceP$s4q4)
-experienceP$Average <- round(ave(experienceP$s2q1, experienceP$s2q3, experienceP$s4q3, experienceP$s4q4),2)
+
+experienceP <- data.frame(experienceP$s2q1, experienceP$s2q3, experienceP$s4q3, experienceP$s4q4, Average=rowMeans(experienceP))
 
 boxplot(experienceP[,1:5], data=experienceP, main="Playability Experience",
-        xlab="Game Story Experience", col = coul, ylab="Experience Score", ylim=c(0,4))
+        xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(experienceP)
 
 vectors <- c('s2q1','s2q3', 's4q3','s4q4')
@@ -461,10 +524,10 @@ psych::alpha(experienceAlpha)$total$std.alpha
 ###############################
 vectors <- c('s2q2','s2q6')
 learnability <- data[vectors]
-learnability$Average <- round(ave(learnability$s2q2, learnability$s2q6),2)
 
+learnability <- data.frame(learnability$s2q2, learnability$s2q6, Average=rowMeans(learnability))
 boxplot(learnability[,1:3], data=learnability, main="Game Mechanics (Learnability)",
-        xlab="Learnability", col = coul, ylab="Learnability Score", ylim=c(0,4))
+        xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(learnability)
 
 learnabilityAlpha <- learnability[vectors]
@@ -483,12 +546,15 @@ difficulty$s2q8[difficulty$s2q8==0] <-4
 difficulty$s2q8[difficulty$s2q8=='zero'] <-0
 difficulty$s2q8[difficulty$s2q8=='one'] <-1
 difficulty$s2q8 <- as.numeric(difficulty$s2q8)
-difficulty$Average <- round(ave(difficulty$s2q7, difficulty$s2q8),2)
+
+difficulty <- data.frame(difficulty$s2q7, difficulty$s2q8, Average=rowMeans(difficulty))
+
 
 boxplot(difficulty[,1:3], data=difficulty, main="Game play (Difficulty)",
-        xlab="Game Play", col = coul, ylab="Difficulty Score", ylim=c(0,4))
+        xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(difficulty)
 
+chisq.test(table(difficulty$difficulty.s2q8, difficulty$difficulty.s2q7))
 
 ###################
 #Seriousness Experience
@@ -517,10 +583,11 @@ experienceS$s4q2[experienceS$s4q2==0] <-4
 experienceS$s4q2[experienceS$s4q2=='zero'] <-0
 experienceS$s4q2[experienceS$s4q2=='one'] <-1
 experienceS$s4q2 <- as.numeric(experienceS$s4q2)
-experienceS$Average <- round(ave(experienceS$s2q4, experienceS$s2q5, experienceS$s3q1, experienceS$s3q4, experienceS$s3q6, experienceS$s4q1,experienceS$s4q2),2)
+
+experienceS <- data.frame(experienceS$s2q4, experienceS$s2q5, experienceS$s3q1, experienceS$s3q4, experienceS$s3q6, experienceS$s4q1,experienceS$s4q2, Average=rowMeans(experienceS))
 
 boxplot(experienceS[,1:8], data=experienceS, main="Seriousness Experience",
-        xlab="Seriousness Experience", col = coul, ylab="Experience Score", ylim=c(0,4))
+        xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(experienceS)
 vectors <- c('s2q4','s2q5')
 experienceSAlpha <- experienceS[vectors]
@@ -530,10 +597,9 @@ psych::alpha(experienceSAlpha)$total$std.alpha
 ##########
 vectors <- c('s3q2','s3q3', 's3q5','s4q5', 's4q6')
 efficiency <- data[vectors]
-efficiency$Average <- round(ave(efficiency$s3q2, efficiency$s3q3, efficiency$s3q5, efficiency$s4q5, efficiency$s4q6),2)
-
+efficiency <- data.frame(efficiency$s3q2, efficiency$s3q3, efficiency$s3q5, efficiency$s4q5, efficiency$s4q6, Average=rowMeans(efficiency))
 boxplot(efficiency[,1:6], data=efficiency, main="Message Efficiency",
-        xlab="Efficiency", col = coul, ylab="Efficiency Score", ylim=c(0,4))
+        xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(efficiency)
 ##############
 ###Relate intersting variances to:
@@ -542,19 +608,19 @@ summary(efficiency)
 #############
 AgeGroup <- cbind(age, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q1, AgeGroup, main = "Playability experience per age group",
-        xlab = "Age", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q1, AgeGroup, main = "Seriousness experience per age group",
-        xlab = "Age", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q1, AgeGroup, main = "Difficulty per age group",
-        xlab = "Age", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q1, AgeGroup, main = "Efficiency per age group",
-        xlab = "Age", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q1, AgeGroup, main = "Learnability per age group",
-        xlab = "Age", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 ##########
 ##Blame
@@ -579,38 +645,38 @@ boxplot(learnability$Average~s1q4, BlameGroup, main = "Learnability per Blame",
 ##############
 ResponseGroup <- cbind(response, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q2, ResponseGroup, main = "Playability experience per Country Response",
-        xlab = "Response", ylim = c(0, 4), col = coul )
+        xlab = " Crisis Response", ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q2, ResponseGroup, main = "Seriousness experience per Country Response",
-        xlab = "Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q2, ResponseGroup, main = "Difficulty per Country Response",
-        xlab = "Response", ylim = c(0, 4), col = coul )
+        xlab = "CrisisResponse", ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q2, ResponseGroup, main = "Efficiency per Country Response",
-        xlab = "Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q2, ResponseGroup, main = "Learnability per Country Response",
-        xlab = "Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
 
 #############
 ##Situation
 ###############
 SituationGroup <- cbind(situation, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q3, SituationGroup, main = "Playability experience per Country Situation",
-        xlab = "Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q3, SituationGroup, main = "Seriousness experience per Country Situation",
-        xlab = "Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q3, SituationGroup, main = "Difficulty per Country Situation",
-        xlab = "Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q3, SituationGroup, main = "Efficiency per Country Situation",
-        xlab = "Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q3, SituationGroup, main = "Learnability per Country Situation",
-        xlab = "Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
 
 ###############
 ##Country
@@ -639,6 +705,7 @@ playerD$accept[playerD$accept<7] <-"Between 0 and 6"
 playerD$resist[playerD$resist>6] <-"Between 7 and 13"
 playerD$resist[playerD$resist<7] <-"Between 0 and 6"
 AcceptGroup <- cbind(playerD, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
+par(mfrow=c(3,2))
 boxplot(experienceP$Average~accept, AcceptGroup, main = "Playability experience per Accept",
         xlab = "Accept rate", ylim = c(0, 4), col = coul )
 
@@ -654,6 +721,9 @@ boxplot(efficiency$Average~accept, AcceptGroup, main = "Efficiency per Accept",
 boxplot(learnability$Average~accept, AcceptGroup, main = "Learnability per Accept",
         xlab = "Accept rate", ylim = c(0, 4), col = coul )
 
+par(mfrow=c(1,1))
+par(mfrow=c(3,2))
+
 boxplot(experienceP$Average~resist, AcceptGroup, main = "Playability experience per Resist",
         xlab = "Resist rate", ylim = c(0, 4), col = coul )
 
@@ -668,6 +738,7 @@ boxplot(efficiency$Average~resist, AcceptGroup, main = "Efficiency per Resist",
 
 boxplot(learnability$Average~resist, AcceptGroup, main = "Learnability per Resist",
         xlab = "Resist rate", ylim = c(0, 4), col = coul )
+par(mfrow=c(1,1))
 ##############
 ##Government Measure
 ##############
@@ -679,6 +750,7 @@ governmentM$testing[governmentM$testing>6] <-"Between 7 and 13"
 governmentM$testing[governmentM$testing<7] <-"Between 0 and 6"
 governmentM$awareness[governmentM$awareness>6] <-"Between 7 and 13"
 governmentM$awareness[governmentM$awareness<7] <-"Between 0 and 6"
+par(mfrow=c(3,2))
 MeasureGroup <- cbind(governmentM, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~surveillance, MeasureGroup, main = "Playability experience per Surveillance",
         xlab = "Surveillance rate", ylim = c(0, 4), col = coul )
@@ -695,6 +767,8 @@ boxplot(efficiency$Average~surveillance, MeasureGroup, main = "Efficiency per Su
 boxplot(learnability$Average~surveillance, MeasureGroup, main = "Learnability per Surveillance",
         xlab = "Surveillance rate", ylim = c(0, 4), col = coul )
 
+par(mfrow=c(1,1))
+par(mfrow=c(3,2))
 boxplot(experienceP$Average~lockdown, MeasureGroup, main = "Playability experience per Lockdown",
         xlab = "Lockdown rate", ylim = c(0, 4), col = coul )
 
@@ -709,6 +783,10 @@ boxplot(efficiency$Average~lockdown, MeasureGroup, main = "Efficiency per Lockdo
 
 boxplot(learnability$Average~lockdown, MeasureGroup, main = "Learnability per Lockdown",
         xlab = "Lockdown rate", ylim = c(0, 4), col = coul )
+
+par(mfrow=c(1,1))
+par(mfrow=c(3,2))
+
 boxplot(experienceP$Average~testing, MeasureGroup, main = "Playability experience per Testing",
         xlab = "Testing rate", ylim = c(0, 4), col = coul )
 
@@ -724,6 +802,9 @@ boxplot(efficiency$Average~testing, MeasureGroup, main = "Efficiency per Testing
 boxplot(learnability$Average~testing, MeasureGroup, main = "Learnability per Testing",
         xlab = "Testing rate", ylim = c(0, 4), col = coul )
 
+par(mfrow=c(1,1))
+par(mfrow=c(3,2))
+
 boxplot(experienceP$Average~awareness, MeasureGroup, main = "Playability experience per Awareness",
         xlab = "Awareness rate", ylim = c(0, 4), col = coul )
 
@@ -738,17 +819,21 @@ boxplot(efficiency$Average~awareness, MeasureGroup, main = "Efficiency per Aware
 
 boxplot(learnability$Average~awareness, MeasureGroup, main = "Learnability per Awareness",
         xlab = "Awareness rate", ylim = c(0, 4), col = coul )
+par(mfrow=c(1,1))
 ############
 ##Score
 ##########
 score <- sequence['score']
 score[score<40] <-"Bad (<40)"
-score[(score>=40 & score<70) & score!="Bad (<40)"] <-"Okay (40<=x<70)"
-score[score>=70 & score!="Bad (<40)" & score != "Okay (40<=x<70)"] <-"Excellent (>70)"
+#score[(score>=40 & score<70) & score!="Bad (<40)"] <-"Okay (40<=x<70)"
+#score[score>=70 & score!="Bad (<40)" & score != "Okay (40<=x<70)"] <-"Excellent (>70)"
+score[(score>=55 & score<=65) & score!="Bad (<40)"] <-"Okay (55<=x<=65)"
+score[score>65 & score!="Bad (<40)" & score != "Okay (55<=x<=65)"] <-"Excellent (>65)"
 
 ScoreGroup <- cbind(score, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 ScoreG_count<- table(ScoreGroup$score)
 par(mar = rep(2, 4))
+par(mfrow=c(3,2))
 theplot<-barplot(ScoreG_count,
                  main="Score Groups",
                  xlab="Game Result",
@@ -770,7 +855,7 @@ boxplot(efficiency$Average~score, ScoreGroup, main = "Efficiency per Score",
 
 boxplot(learnability$Average~score, ScoreGroup, main = "Learnability per Score",
         xlab = "Score rate", ylim = c(0, 4), col = coul )
-
+par(mfrow=c(1,1))
 ##########
 ##Reload playerD and governmentM for coorelations ##
 #############################
@@ -858,30 +943,30 @@ shapiro.test(experienceS$s4q2)
 ##################
 ##Creat Chisquare p.value matrix###
 ########################
-s2q2A = chisq.test(table(learnability$s2q2,playerD$accept))
-s2q6A = chisq.test(table(learnability$s2q6,playerD$accept))
+s2q2A = chisq.test(table(learnability$learnability.s2q2,playerD$accept))
+s2q6A = chisq.test(table(learnability$learnability.s2q6,playerD$accept))
 
-s3q2A = chisq.test(table(efficiency$s3q2,playerD$accept))
-s3q3A = chisq.test(table(efficiency$s3q3,playerD$accept))
-s3q5A = chisq.test(table(efficiency$s3q5,playerD$accept))
-s4q5A = chisq.test(table(efficiency$s4q5,playerD$accept))
-s4q6A = chisq.test(table(efficiency$s4q6,playerD$accept))
+s3q2A = chisq.test(table(efficiency$efficiency.s3q2,playerD$accept))
+s3q3A = chisq.test(table(efficiency$efficiency.s3q3,playerD$accept))
+s3q5A = chisq.test(table(efficiency$efficiency.s3q5,playerD$accept))
+s4q5A = chisq.test(table(efficiency$efficiency.s4q5,playerD$accept))
+s4q6A = chisq.test(table(efficiency$efficiency.s4q6,playerD$accept))
 
-s2q7A = chisq.test(table(difficulty$s2q7,playerD$accept))
-s2q8A = chisq.test(table(difficulty$s2q8,playerD$accept))
+s2q7A = chisq.test(table(difficulty$difficulty.s2q7,playerD$accept))
+s2q8A = chisq.test(table(difficulty$difficulty.s2q8,playerD$accept))
 
-s2q1A = chisq.test(table(experienceP$s2q1,playerD$accept))
-s2q3A = chisq.test(table(experienceP$s2q3,playerD$accept))
-s4q3A = chisq.test(table(experienceP$s4q3,playerD$accept))
-s4q4A = chisq.test(table(experienceP$s4q4,playerD$accept))
+s2q1A = chisq.test(table(experienceP$experienceP.s2q1,playerD$accept))
+s2q3A = chisq.test(table(experienceP$experienceP.s2q3,playerD$accept))
+s4q3A = chisq.test(table(experienceP$experienceP.s4q3,playerD$accept))
+s4q4A = chisq.test(table(experienceP$experienceP.s4q4,playerD$accept))
 
-s2q4A = chisq.test(table(experienceS$s2q4,playerD$accept))
-s2q5A = chisq.test(table(experienceS$s2q5,playerD$accept))
-s3q1A = chisq.test(table(experienceS$s3q1,playerD$accept))
-s3q4A = chisq.test(table(experienceS$s3q4,playerD$accept))
-s3q6A = chisq.test(table(experienceS$s3q6,playerD$accept))
-s4q1A = chisq.test(table(experienceS$s4q1,playerD$accept))
-s4q2A = chisq.test(table(experienceS$s4q2,playerD$accept))
+s2q4A = chisq.test(table(experienceS$experienceS.s2q4,playerD$accept))
+s2q5A = chisq.test(table(experienceS$experienceS.s2q5,playerD$accept))
+s3q1A = chisq.test(table(experienceS$experienceS.s3q1,playerD$accept))
+s3q4A = chisq.test(table(experienceS$experienceS.s3q4,playerD$accept))
+s3q6A = chisq.test(table(experienceS$experienceS.s3q6,playerD$accept))
+s4q1A = chisq.test(table(experienceS$experienceS.s4q1,playerD$accept))
+s4q2A = chisq.test(table(experienceS$experienceS.s4q2,playerD$accept))
 
 Accept_<- c(s2q2A$p.value, s2q6A$p.value, s3q2A$p.value,
             s3q3A$p.value, s3q5A$p.value, s4q5A$p.value,
@@ -891,30 +976,30 @@ Accept_<- c(s2q2A$p.value, s2q6A$p.value, s3q2A$p.value,
             s3q1A$p.value, s3q4A$p.value, s3q6A$p.value,
             s4q1A$p.value, s4q2A$p.value)
 
-s2q2Age = chisq.test(table(learnability$s2q2,age$s1q1))
-s2q6Age = chisq.test(table(learnability$s2q6,age$s1q1))
+s2q2Age = chisq.test(table(learnability$learnability.s2q2,age$s1q1))
+s2q6Age = chisq.test(table(learnability$learnability.s2q6,age$s1q1))
 
-s3q2Age = chisq.test(table(efficiency$s3q2,age$s1q1))
-s3q3Age = chisq.test(table(efficiency$s3q3,age$s1q1))
-s3q5Age = chisq.test(table(efficiency$s3q5,age$s1q1))
-s4q5Age = chisq.test(table(efficiency$s4q5,age$s1q1))
-s4q6Age = chisq.test(table(efficiency$s4q6,age$s1q1))
+s3q2Age = chisq.test(table(efficiency$efficiency.s3q2,age$s1q1))
+s3q3Age = chisq.test(table(efficiency$efficiency.s3q3,age$s1q1))
+s3q5Age = chisq.test(table(efficiency$efficiency.s3q5,age$s1q1))
+s4q5Age = chisq.test(table(efficiency$efficiency.s4q5,age$s1q1))
+s4q6Age = chisq.test(table(efficiency$efficiency.s4q6,age$s1q1))
 
-s2q7Age = chisq.test(table(difficulty$s2q7,age$s1q1))
-s2q8Age = chisq.test(table(difficulty$s2q8,age$s1q1))
+s2q7Age = chisq.test(table(difficulty$difficulty.s2q7,age$s1q1))
+s2q8Age = chisq.test(table(difficulty$difficulty.s2q8,age$s1q1))
 
-s2q1Age = chisq.test(table(experienceP$s2q1,age$s1q1))
-s2q3Age = chisq.test(table(experienceP$s2q3,age$s1q1))
-s4q3Age = chisq.test(table(experienceP$s4q3,age$s1q1))
-s4q4Age = chisq.test(table(experienceP$s4q4,age$s1q1))
+s2q1Age = chisq.test(table(experienceP$experienceP.s2q1,age$s1q1))
+s2q3Age = chisq.test(table(experienceP$experienceP.s2q3,age$s1q1))
+s4q3Age = chisq.test(table(experienceP$experienceP.s4q3,age$s1q1))
+s4q4Age = chisq.test(table(experienceP$experienceP.s4q4,age$s1q1))
 
-s2q4Age = chisq.test(table(experienceS$s2q4,age$s1q1))
-s2q5Age = chisq.test(table(experienceS$s2q5,age$s1q1))
-s3q1Age = chisq.test(table(experienceS$s3q1,age$s1q1))
-s3q4Age = chisq.test(table(experienceS$s3q4,age$s1q1))
-s3q6Age = chisq.test(table(experienceS$s3q6,age$s1q1))
-s4q1Age = chisq.test(table(experienceS$s4q1,age$s1q1))
-s4q2Age = chisq.test(table(experienceS$s4q2,age$s1q1))
+s2q4Age = chisq.test(table(experienceS$experienceS.s2q4,age$s1q1))
+s2q5Age = chisq.test(table(experienceS$experienceS.s2q5,age$s1q1))
+s3q1Age = chisq.test(table(experienceS$experienceS.s3q1,age$s1q1))
+s3q4Age = chisq.test(table(experienceS$experienceS.s3q4,age$s1q1))
+s3q6Age = chisq.test(table(experienceS$experienceS.s3q6,age$s1q1))
+s4q1Age = chisq.test(table(experienceS$experienceS.s4q1,age$s1q1))
+s4q2Age = chisq.test(table(experienceS$experienceS.s4q2,age$s1q1))
 
 Age_<- c(s2q2Age$p.value, s2q6Age$p.value, s3q2Age$p.value,
          s3q3Age$p.value, s3q5Age$p.value, s4q5Age$p.value,
@@ -924,30 +1009,30 @@ Age_<- c(s2q2Age$p.value, s2q6Age$p.value, s3q2Age$p.value,
          s3q1Age$p.value, s3q4Age$p.value, s3q6Age$p.value,
          s4q1Age$p.value, s4q2Age$p.value)
 
-s2q2Res = chisq.test(table(learnability$s2q2,response$s1q2))
-s2q6Res = chisq.test(table(learnability$s2q6,response$s1q2))
+s2q2Res = chisq.test(table(learnability$learnability.s2q2,response$s1q2))
+s2q6Res = chisq.test(table(learnability$learnability.s2q6,response$s1q2))
 
-s3q2Res = chisq.test(table(efficiency$s3q2,response$s1q2))
-s3q3Res = chisq.test(table(efficiency$s3q3,response$s1q2))
-s3q5Res = chisq.test(table(efficiency$s3q5,response$s1q2))
-s4q5Res = chisq.test(table(efficiency$s4q5,response$s1q2))
-s4q6Res = chisq.test(table(efficiency$s4q6,response$s1q2))
+s3q2Res = chisq.test(table(efficiency$efficiency.s3q2,response$s1q2))
+s3q3Res = chisq.test(table(efficiency$efficiency.s3q3,response$s1q2))
+s3q5Res = chisq.test(table(efficiency$efficiency.s3q5,response$s1q2))
+s4q5Res = chisq.test(table(efficiency$efficiency.s4q5,response$s1q2))
+s4q6Res = chisq.test(table(efficiency$efficiency.s4q6,response$s1q2))
 
-s2q7Res = chisq.test(table(difficulty$s2q7,response$s1q2))
-s2q8Res = chisq.test(table(difficulty$s2q8,response$s1q2))
+s2q7Res = chisq.test(table(difficulty$difficulty.s2q7,response$s1q2))
+s2q8Res = chisq.test(table(difficulty$difficulty.s2q8,response$s1q2))
 
-s2q1Res = chisq.test(table(experienceP$s2q1,response$s1q2))
-s2q3Res = chisq.test(table(experienceP$s2q3,response$s1q2))
-s4q3Res = chisq.test(table(experienceP$s4q3,response$s1q2))
-s4q4Res = chisq.test(table(experienceP$s4q4,response$s1q2))
+s2q1Res = chisq.test(table(experienceP$experienceP.s2q1,response$s1q2))
+s2q3Res = chisq.test(table(experienceP$experienceP.s2q3,response$s1q2))
+s4q3Res = chisq.test(table(experienceP$experienceP.s4q3,response$s1q2))
+s4q4Res = chisq.test(table(experienceP$experienceP.s4q4,response$s1q2))
 
-s2q4Res = chisq.test(table(experienceS$s2q4,response$s1q2))
-s2q5Res = chisq.test(table(experienceS$s2q5,response$s1q2))
-s3q1Res = chisq.test(table(experienceS$s3q1,response$s1q2))
-s3q4Res = chisq.test(table(experienceS$s3q4,response$s1q2))
-s3q6Res = chisq.test(table(experienceS$s3q6,response$s1q2))
-s4q1Res = chisq.test(table(experienceS$s4q1,response$s1q2))
-s4q2Res = chisq.test(table(experienceS$s4q2,response$s1q2))
+s2q4Res = chisq.test(table(experienceS$experienceS.s2q4,response$s1q2))
+s2q5Res = chisq.test(table(experienceS$experienceS.s2q5,response$s1q2))
+s3q1Res = chisq.test(table(experienceS$experienceS.s3q1,response$s1q2))
+s3q4Res = chisq.test(table(experienceS$experienceS.s3q4,response$s1q2))
+s3q6Res = chisq.test(table(experienceS$experienceS.s3q6,response$s1q2))
+s4q1Res = chisq.test(table(experienceS$experienceS.s4q1,response$s1q2))
+s4q2Res = chisq.test(table(experienceS$experienceS.s4q2,response$s1q2))
 
 Res_<- c(s2q2Res$p.value, s2q6Res$p.value, s3q2Res$p.value,
          s3q3Res$p.value, s3q5Res$p.value, s4q5Res$p.value,
@@ -957,30 +1042,30 @@ Res_<- c(s2q2Res$p.value, s2q6Res$p.value, s3q2Res$p.value,
          s3q1Res$p.value, s3q4Res$p.value, s3q6Res$p.value,
          s4q1Res$p.value, s4q2Res$p.value)
 
-s2q2Sit = chisq.test(table(learnability$s2q2,situation$s1q3))
-s2q6Sit = chisq.test(table(learnability$s2q6,situation$s1q3))
+s2q2Sit = chisq.test(table(learnability$learnability.s2q2,situation$s1q3))
+s2q6Sit = chisq.test(table(learnability$learnability.s2q6,situation$s1q3))
 
-s3q2Sit = chisq.test(table(efficiency$s3q2,situation$s1q3))
-s3q3Sit = chisq.test(table(efficiency$s3q3,situation$s1q3))
-s3q5Sit = chisq.test(table(efficiency$s3q5,situation$s1q3))
-s4q5Sit = chisq.test(table(efficiency$s4q5,situation$s1q3))
-s4q6Sit = chisq.test(table(efficiency$s4q6,situation$s1q3))
+s3q2Sit = chisq.test(table(efficiency$efficiency.s3q2,situation$s1q3))
+s3q3Sit = chisq.test(table(efficiency$efficiency.s3q3,situation$s1q3))
+s3q5Sit = chisq.test(table(efficiency$efficiency.s3q5,situation$s1q3))
+s4q5Sit = chisq.test(table(efficiency$efficiency.s4q5,situation$s1q3))
+s4q6Sit = chisq.test(table(efficiency$efficiency.s4q6,situation$s1q3))
 
-s2q7Sit = chisq.test(table(difficulty$s2q7,situation$s1q3))
-s2q8Sit = chisq.test(table(difficulty$s2q8,situation$s1q3))
+s2q7Sit = chisq.test(table(difficulty$difficulty.s2q7,situation$s1q3))
+s2q8Sit = chisq.test(table(difficulty$difficulty.s2q8,situation$s1q3))
 
-s2q1Sit = chisq.test(table(experienceP$s2q1,situation$s1q3))
-s2q3Sit = chisq.test(table(experienceP$s2q3,situation$s1q3))
-s4q3Sit = chisq.test(table(experienceP$s4q3,situation$s1q3))
-s4q4Sit = chisq.test(table(experienceP$s4q4,situation$s1q3))
+s2q1Sit = chisq.test(table(experienceP$experienceP.s2q1,situation$s1q3))
+s2q3Sit = chisq.test(table(experienceP$experienceP.s2q3,situation$s1q3))
+s4q3Sit = chisq.test(table(experienceP$experienceP.s4q3,situation$s1q3))
+s4q4Sit = chisq.test(table(experienceP$experienceP.s4q4,situation$s1q3))
 
-s2q4Sit = chisq.test(table(experienceS$s2q4,situation$s1q3))
-s2q5Sit = chisq.test(table(experienceS$s2q5,situation$s1q3))
-s3q1Sit = chisq.test(table(experienceS$s3q1,situation$s1q3))
-s3q4Sit = chisq.test(table(experienceS$s3q4,situation$s1q3))
-s3q6Sit = chisq.test(table(experienceS$s3q6,situation$s1q3))
-s4q1Sit = chisq.test(table(experienceS$s4q1,situation$s1q3))
-s4q2Sit = chisq.test(table(experienceS$s4q2,situation$s1q3))
+s2q4Sit = chisq.test(table(experienceS$experienceS.s2q4,situation$s1q3))
+s2q5Sit = chisq.test(table(experienceS$experienceS.s2q5,situation$s1q3))
+s3q1Sit = chisq.test(table(experienceS$experienceS.s3q1,situation$s1q3))
+s3q4Sit = chisq.test(table(experienceS$experienceS.s3q4,situation$s1q3))
+s3q6Sit = chisq.test(table(experienceS$experienceS.s3q6,situation$s1q3))
+s4q1Sit = chisq.test(table(experienceS$experienceS.s4q1,situation$s1q3))
+s4q2Sit = chisq.test(table(experienceS$experienceS.s4q2,situation$s1q3))
 
 Sit_<- c(s2q2Sit$p.value, s2q6Sit$p.value, s3q2Sit$p.value,
          s3q3Sit$p.value, s3q5Sit$p.value, s4q5Sit$p.value,
@@ -991,30 +1076,30 @@ Sit_<- c(s2q2Sit$p.value, s2q6Sit$p.value, s3q2Sit$p.value,
          s4q1Sit$p.value, s4q2Sit$p.value)
 
 
-s2q2Blame = chisq.test(table(learnability$s2q2,blame$s1q4))
-s2q6Blame = chisq.test(table(learnability$s2q6,blame$s1q4))
+s2q2Blame = chisq.test(table(learnability$learnability.s2q2,blame$s1q4))
+s2q6Blame = chisq.test(table(learnability$learnability.s2q6,blame$s1q4))
 
-s3q2Blame = chisq.test(table(efficiency$s3q2,blame$s1q4))
-s3q3Blame = chisq.test(table(efficiency$s3q3,blame$s1q4))
-s3q5Blame = chisq.test(table(efficiency$s3q5,blame$s1q4))
-s4q5Blame = chisq.test(table(efficiency$s4q5,blame$s1q4))
-s4q6Blame = chisq.test(table(efficiency$s4q6,blame$s1q4))
+s3q2Blame = chisq.test(table(efficiency$efficiency.s3q2,blame$s1q4))
+s3q3Blame = chisq.test(table(efficiency$efficiency.s3q3,blame$s1q4))
+s3q5Blame = chisq.test(table(efficiency$efficiency.s3q5,blame$s1q4))
+s4q5Blame = chisq.test(table(efficiency$efficiency.s4q5,blame$s1q4))
+s4q6Blame = chisq.test(table(efficiency$efficiency.s4q6,blame$s1q4))
 
-s2q7Blame = chisq.test(table(difficulty$s2q7,blame$s1q4))
-s2q8Blame = chisq.test(table(difficulty$s2q8,blame$s1q4))
+s2q7Blame = chisq.test(table(difficulty$difficulty.s2q7,blame$s1q4))
+s2q8Blame = chisq.test(table(difficulty$difficulty.s2q8,blame$s1q4))
 
-s2q1Blame = chisq.test(table(experienceP$s2q1,blame$s1q4))
-s2q3Blame = chisq.test(table(experienceP$s2q3,blame$s1q4))
-s4q3Blame = chisq.test(table(experienceP$s4q3,blame$s1q4))
-s4q4Blame = chisq.test(table(experienceP$s4q4,blame$s1q4))
+s2q1Blame = chisq.test(table(experienceP$experienceP.s2q1,blame$s1q4))
+s2q3Blame = chisq.test(table(experienceP$experienceP.s2q3,blame$s1q4))
+s4q3Blame = chisq.test(table(experienceP$experienceP.s4q3,blame$s1q4))
+s4q4Blame = chisq.test(table(experienceP$experienceP.s4q4,blame$s1q4))
 
-s2q4Blame = chisq.test(table(experienceS$s2q4,blame$s1q4))
-s2q5Blame = chisq.test(table(experienceS$s2q5,blame$s1q4))
-s3q1Blame = chisq.test(table(experienceS$s3q1,blame$s1q4))
-s3q4Blame = chisq.test(table(experienceS$s3q4,blame$s1q4))
-s3q6Blame = chisq.test(table(experienceS$s3q6,blame$s1q4))
-s4q1Blame = chisq.test(table(experienceS$s4q1,blame$s1q4))
-s4q2Blame = chisq.test(table(experienceS$s4q2,blame$s1q4))
+s2q4Blame = chisq.test(table(experienceS$experienceS.s2q4,blame$s1q4))
+s2q5Blame = chisq.test(table(experienceS$experienceS.s2q5,blame$s1q4))
+s3q1Blame = chisq.test(table(experienceS$experienceS.s3q1,blame$s1q4))
+s3q4Blame = chisq.test(table(experienceS$experienceS.s3q4,blame$s1q4))
+s3q6Blame = chisq.test(table(experienceS$experienceS.s3q6,blame$s1q4))
+s4q1Blame = chisq.test(table(experienceS$experienceS.s4q1,blame$s1q4))
+s4q2Blame = chisq.test(table(experienceS$experienceS.s4q2,blame$s1q4))
 
 Blame_<- c(s2q2Blame$p.value, s2q6Blame$p.value, s3q2Blame$p.value,
            s3q3Blame$p.value, s3q5Blame$p.value, s4q5Blame$p.value,
@@ -1024,30 +1109,30 @@ Blame_<- c(s2q2Blame$p.value, s2q6Blame$p.value, s3q2Blame$p.value,
            s3q1Blame$p.value, s3q4Blame$p.value, s3q6Blame$p.value,
            s4q1Blame$p.value, s4q2Blame$p.value)
 
-s2q2Country = chisq.test(table(learnability$s2q2,countries$Coun))
-s2q6Country = chisq.test(table(learnability$s2q6,countries$Coun))
+s2q2Country = chisq.test(table(learnability$learnability.s2q2,countries$Coun))
+s2q6Country = chisq.test(table(learnability$learnability.s2q6,countries$Coun))
 
-s3q2Country = chisq.test(table(efficiency$s3q2,countries$Coun))
-s3q3Country = chisq.test(table(efficiency$s3q3,countries$Coun))
-s3q5Country = chisq.test(table(efficiency$s3q5,countries$Coun))
-s4q5Country = chisq.test(table(efficiency$s4q5,countries$Coun))
-s4q6Country = chisq.test(table(efficiency$s4q6,countries$Coun))
+s3q2Country = chisq.test(table(efficiency$efficiency.s3q2,countries$Coun))
+s3q3Country = chisq.test(table(efficiency$efficiency.s3q3,countries$Coun))
+s3q5Country = chisq.test(table(efficiency$efficiency.s3q5,countries$Coun))
+s4q5Country = chisq.test(table(efficiency$efficiency.s4q5,countries$Coun))
+s4q6Country = chisq.test(table(efficiency$efficiency.s4q6,countries$Coun))
 
-s2q7Country = chisq.test(table(difficulty$s2q7,countries$Coun))
-s2q8Country = chisq.test(table(difficulty$s2q8,countries$Coun))
+s2q7Country = chisq.test(table(difficulty$difficulty.s2q7,countries$Coun))
+s2q8Country = chisq.test(table(difficulty$difficulty.s2q8,countries$Coun))
 
-s2q1Country = chisq.test(table(experienceP$s2q1,countries$Coun))
-s2q3Country = chisq.test(table(experienceP$s2q3,countries$Coun))
-s4q3Country = chisq.test(table(experienceP$s4q3,countries$Coun))
-s4q4Country = chisq.test(table(experienceP$s4q4,countries$Coun))
+s2q1Country = chisq.test(table(experienceP$experienceP.s2q1,countries$Coun))
+s2q3Country = chisq.test(table(experienceP$experienceP.s2q3,countries$Coun))
+s4q3Country = chisq.test(table(experienceP$experienceP.s4q3,countries$Coun))
+s4q4Country = chisq.test(table(experienceP$experienceP.s4q4,countries$Coun))
 
-s2q4Country = chisq.test(table(experienceS$s2q4,countries$Coun))
-s2q5Country = chisq.test(table(experienceS$s2q5,countries$Coun))
-s3q1Country = chisq.test(table(experienceS$s3q1,countries$Coun))
-s3q4Country = chisq.test(table(experienceS$s3q4,countries$Coun))
-s3q6Country = chisq.test(table(experienceS$s3q6,countries$Coun))
-s4q1Country = chisq.test(table(experienceS$s4q1,countries$Coun))
-s4q2Country = chisq.test(table(experienceS$s4q2,countries$Coun))
+s2q4Country = chisq.test(table(experienceS$experienceS.s2q4,countries$Coun))
+s2q5Country = chisq.test(table(experienceS$experienceS.s2q5,countries$Coun))
+s3q1Country = chisq.test(table(experienceS$experienceS.s3q1,countries$Coun))
+s3q4Country = chisq.test(table(experienceS$experienceS.s3q4,countries$Coun))
+s3q6Country = chisq.test(table(experienceS$experienceS.s3q6,countries$Coun))
+s4q1Country = chisq.test(table(experienceS$experienceS.s4q1,countries$Coun))
+s4q2Country = chisq.test(table(experienceS$experienceS.s4q2,countries$Coun))
 
 Country_<- c(s2q2Country$p.value, s2q6Country$p.value, s3q2Country$p.value,
              s3q3Country$p.value, s3q5Country$p.value, s4q5Country$p.value,
@@ -1064,3 +1149,4 @@ rownames(chiTestP) <- c("s2q2", "s2q6", "s3q2", "s3q3", "s3q5", "s4q5",
                         "s4q4", "s2q4", "s2q5", "s3q1", "s3q4", "s3q6",
                         "s4q1", "s4q2")
 chiTestP
+
