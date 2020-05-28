@@ -3,7 +3,6 @@
 ################
 library(plotrix)
 library(reshape2)
-library(psych)
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -241,48 +240,48 @@ ggplot(data=governmentMS, aes(x=Measure, y=Count, fill=Measure)) +
 ################
 # Boxplot of Decisions and Measures
 ###############
-boxplot(playerD[,1:2],data=playerD, main="Player's Decision",
-        xlab="Decision",col = coul, ylab="Number of Decisions",ylim=c(0,13))
+boxplot(playerD[,1:2], data=playerD, main="Player's Decision",
+        xlab="Decision",col = coul, ylab="Number of Decisions", varwidth= TRUE, ylim=c(0,13))
 boxplot(governmentM[,1:4],data=governmentM, main="Government Measures",
-        xlab="Measure",col = coul, ylab="Number of Measures", ylim=c(0,13))
+        xlab="Measure",col = coul, ylab="Number of Measures",bbxwex= 0.2, varwidth= TRUE, ylim=c(0,13))
 
 boxplot(sequence$score~playerD$accept, 
-        main="PLayer's score per times they accept", 
+        main="Player's score per times they accept", varwidth= TRUE,  
         xlab="Number of accepts", ylab="Score")
 
 par(mfrow=c(2,2))
 boxplot(sequence$score~governmentM$surveillance, 
         main="Surveillance measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~governmentM$testing, 
         main="Testing measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~governmentM$lockdown, 
         main="Lockdown measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~governmentM$awareness, 
         main="Awareness measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 
 par(mfrow=c(2,3))
 boxplot(sequence$score~combD$LT, 
         main="Lockdown and Testing measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~combD$LS, 
         main="Lockdown and Surveillance measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~combD$ST, 
         main="Surveillance and Testing measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~combD$AT, 
-        main="Awareness and Testing measure", 
-        xlab="Occurance of Measure", ylab="Score")
-boxplot(sequence$score~combD$AL, 
+        main="Awareness and Testing measure",
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
+boxplot(sequence$score~combD$AL,
         main="Awareness and Lockdown measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 boxplot(sequence$score~combD$AS, 
         main="Awareness and Surveillance measure", 
-        xlab="Occurance of Measure", ylab="Score")
+        xlab="Occurance of Measure", varwidth= TRUE, ylab="Score")
 
 par(mfrow=c(1,1))
 #############
@@ -292,13 +291,6 @@ boxplot(sequence$score,data=playerD, main="Player's Scores",
         xlab="Score",col = ("Yellow"), ylab="Number of Decisions")
 summary(sequence$score)
 dandm <- cbind(governmentM, playerD)
-##########################
-#IMPORTANT TO ASK#
-#########
-shapiro.test(sequence$score)
-qqnorm(sequence$score)
-ggqqplot(sequence$score, ylab = "Score")
-hist(sequence$score, main="Histogram of scores")
 ######################
 #Age Category
 ########
@@ -408,13 +400,13 @@ summary(Europe)
 summary(Levant)
 summary(d)
 par(mfrow=c(2,2))
-boxplot(Asia[,2:2], data=Asia, main = "Asia",
+boxplot(Asia[,2:2], data=Asia, main = paste("Asia, n=", nrow(Asia)),
         xlab = "Asia", col = coul , ylim=c(1,5))
-boxplot(Europe[,2:2], data=Europe, main = "Europe and NA",
+boxplot(Europe[,2:2], data=Europe, main = paste("Europe and NA, n=", nrow(Europe)),
         xlab = "Europe", col = coul , ylim=c(1,5))
-boxplot(Levant[,2:2], data=Levant, main = "Levant and Egypt",
+boxplot(Levant[,2:2], data=Levant, main = paste("Levant and Egypt, n=", nrow(Levant)),
         xlab = "Levant", col = coul , ylim=c(1,5))
-boxplot(d[,2:2], data=d, main = "All",
+boxplot(d[,2:2], data=d, main = paste("All regions, n=", nrow(d)),
         xlab = "All", col = "Purple" , ylim=c(1,5))
 chisq.test(e)
 par(mfrow=c(1,1))
@@ -457,13 +449,13 @@ summary(Europe)
 summary(Levant)
 summary(d)
 par(mfrow=c(2,2))
-boxplot(Asia[,2:2], data=Asia, main = "Asia",
+boxplot(Asia[,2:2], data=Asia, main = paste("Asia, n=", nrow(Asia)),
         xlab = "Asia", col = coul , ylim=c(1,5))
-boxplot(Europe[,2:2], data=Europe, main = "Europe and NA",
+boxplot(Europe[,2:2], data=Europe, main = paste("Europe and NA, n=", nrow(Europe)),
         xlab = "Europe", col = coul , ylim=c(1,5))
-boxplot(Levant[,2:2], data=Levant, main = "Levant and Egypt",
+boxplot(Levant[,2:2], data=Levant, main = paste("Levant and Egypt, n=", nrow(Levant)),
         xlab = "Levant", col = coul , ylim=c(1,5))
-boxplot(d[,2:2], data=d, main = "All",
+boxplot(d[,2:2], data=d, main = paste("All regions, n=", nrow(d)),
         xlab = "All", col = "Purple" , ylim=c(1,5))
 chisq.test(e)
 ######################
@@ -510,14 +502,6 @@ boxplot(experienceP[,1:5], data=experienceP, main="Playability Experience",
         xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(experienceP)
 
-vectors <- c('s2q1','s2q3', 's4q3','s4q4')
-experienceAlpha <- experienceP[vectors]
-psych::alpha(experienceAlpha)$total$std.alpha
-
-vectors <- c('s2q1','s2q3', 's4q4')
-experienceAlpha <- experienceP[vectors]
-psych::alpha(experienceAlpha)$total$std.alpha
-
 
 ###################
 #Game Mechanics (Learnability)
@@ -530,8 +514,6 @@ boxplot(learnability[,1:3], data=learnability, main="Game Mechanics (Learnabilit
         xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(learnability)
 
-learnabilityAlpha <- learnability[vectors]
-psych::alpha(learnabilityAlpha)$total$std.alpha
 
 ###################
 #Game Play (Difficulty)
@@ -589,9 +571,7 @@ experienceS <- data.frame(experienceS$s2q4, experienceS$s2q5, experienceS$s3q1, 
 boxplot(experienceS[,1:8], data=experienceS, main="Seriousness Experience",
         xlab="Question", col = coul, ylab="Response", ylim=c(0,4))
 summary(experienceS)
-vectors <- c('s2q4','s2q5')
-experienceSAlpha <- experienceS[vectors]
-psych::alpha(experienceSAlpha)$total$std.alpha
+
 ###################
 #Efficiency
 ##########
@@ -608,94 +588,94 @@ summary(efficiency)
 #############
 AgeGroup <- cbind(age, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q1, AgeGroup, main = "Playability experience per age group",
-        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", varwidth= TRUE, ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q1, AgeGroup, main = "Seriousness experience per age group",
-        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", varwidth= TRUE, ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q1, AgeGroup, main = "Difficulty per age group",
-        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", varwidth= TRUE, ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q1, AgeGroup, main = "Efficiency per age group",
-        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", varwidth= TRUE, ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q1, AgeGroup, main = "Learnability per age group",
-        xlab = "Age Group", ylab="Mean Scores", ylim = c(0, 4), col = coul )
+        xlab = "Age Group", varwidth= TRUE, ylab="Mean Scores", ylim = c(0, 4), col = coul )
 
 ##########
 ##Blame
 ###########
 BlameGroup <- cbind(blame, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q4, BlameGroup, main = "Playability experience per Blame",
-        xlab = "Blame", ylim = c(0, 4), col = coul )
+        xlab = "Blame", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q4, BlameGroup, main = "Seriousness experience per Blame",
-        xlab = "Blame", ylim = c(0, 4), col = coul )
+        xlab = "Blame", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q4, BlameGroup, main = "Difficulty per Blame",
-        xlab = "Blame", ylim = c(0, 4), col = coul )
+        xlab = "Blame", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q4, BlameGroup, main = "Efficiency per Blame",
-        xlab = "Blame", ylim = c(0, 4), col = coul )
+        xlab = "Blame", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q4, BlameGroup, main = "Learnability per Blame",
-        xlab = "Blame", ylim = c(0, 4), col = coul )
+        xlab = "Blame", varwidth= TRUE, ylim = c(0, 4), col = coul )
 #############
 ##Response
 ##############
 ResponseGroup <- cbind(response, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q2, ResponseGroup, main = "Playability experience per Country Response",
-        xlab = " Crisis Response", ylim = c(0, 4), col = coul )
+        xlab = " Crisis Response", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q2, ResponseGroup, main = "Seriousness experience per Country Response",
-        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q2, ResponseGroup, main = "Difficulty per Country Response",
-        xlab = "CrisisResponse", ylim = c(0, 4), col = coul )
+        xlab = "CrisisResponse", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q2, ResponseGroup, main = "Efficiency per Country Response",
-        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q2, ResponseGroup, main = "Learnability per Country Response",
-        xlab = "Crisis Response", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Response", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 #############
 ##Situation
 ###############
 SituationGroup <- cbind(situation, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~s1q3, SituationGroup, main = "Playability experience per Country Situation",
-        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~s1q3, SituationGroup, main = "Seriousness experience per Country Situation",
-        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~s1q3, SituationGroup, main = "Difficulty per Country Situation",
-        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~s1q3, SituationGroup, main = "Efficiency per Country Situation",
-        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~s1q3, SituationGroup, main = "Learnability per Country Situation",
-        xlab = "Crisis Situation", ylim = c(0, 4), col = coul )
+        xlab = "Crisis Situation", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 ###############
 ##Country
 ###########
 CountryGroup <- cbind(countries, experienceP$Average, experienceS$Average, learnability$Average, efficiency$Average, difficulty$Average)
 boxplot(experienceP$Average~Coun, CountryGroup, main = "Playability experience per Region",
-        xlab = "Region", ylim = c(0, 4), col = coul )
+        xlab = "Region", varwidth= TRUE,ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~Coun, CountryGroup, main = "Seriousness experience per Region",
-        xlab = "Region", ylim = c(0, 4), col = coul )
+        xlab = "Region", varwidth= TRUE,ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~Coun, CountryGroup, main = "Difficulty per Region",
-        xlab = "Region", ylim = c(0, 4), col = coul )
+        xlab = "Region", varwidth= TRUE,ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~Coun, CountryGroup, main = "Efficiency per Region",
-        xlab = "Region", ylim = c(0, 4), col = coul )
+        xlab = "Region", varwidth= TRUE,ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~Coun, CountryGroup, main = "Learnability per Region",
-        xlab = "Region", ylim = c(0, 4), col = coul )
+        xlab = "Region", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 ################
 ##Player Decision
@@ -842,103 +822,28 @@ theplot<-barplot(ScoreG_count,
                  col = coul)
 text(theplot, ScoreG_count-5 , paste(round(ScoreG_count/sum(ScoreG_count)*100,1), "%") ,cex=1)
 boxplot(experienceP$Average~score, ScoreGroup, main = "Playability experience per Score",
-        xlab = "Score rate", ylim = c(0, 4), col = coul )
+        xlab = "Score rate", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(experienceS$Average~score, ScoreGroup, main = "Seriousness experience per Score",
-        xlab = "Score rate", ylim = c(0, 4), col = coul )
+        xlab = "Score rate", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(difficulty$Average~score, ScoreGroup, main = "Difficulty per Score",
-        xlab = "Score rate", ylim = c(0, 4), col = coul )
+        xlab = "Score rate", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(efficiency$Average~score, ScoreGroup, main = "Efficiency per Score",
-        xlab = "Score rate", ylim = c(0, 4), col = coul )
+        xlab = "Score rate", varwidth= TRUE, ylim = c(0, 4), col = coul )
 
 boxplot(learnability$Average~score, ScoreGroup, main = "Learnability per Score",
-        xlab = "Score rate", ylim = c(0, 4), col = coul )
+        xlab = "Score rate", varwidth= TRUE, ylim = c(0, 4), col = coul )
 par(mfrow=c(1,1))
 ##########
-##Reload playerD and governmentM for coorelations ##
+##Reload playerD and governmentM##
 #############################
 drops <- c("sequence")
 decision <- decision[ , !(names(decision) %in% drops)]
 playerD <- decision[2:3]
 governmentM <- decision[30:33]
 
-cor(learnability, playerD,  method = "pearson", use = "complete.obs")
-cor(efficiency, playerD,  method = "pearson", use = "complete.obs")
-cor(difficulty, playerD,  method = "pearson", use = "complete.obs")
-cor(experienceP, playerD,  method = "pearson", use = "complete.obs")
-cor(experienceS, playerD,  method = "pearson", use = "complete.obs")
-
-cor(learnability, governmentM,  method = "pearson", use = "complete.obs")
-cor(efficiency, governmentM,  method = "pearson", use = "complete.obs")
-cor(difficulty, governmentM,  method = "pearson", use = "complete.obs")
-cor(experienceP, governmentM,  method = "pearson", use = "complete.obs")
-cor(experienceS, governmentM,  method = "pearson", use = "complete.obs")
-
-cor.test(learnability$s2q2, playerD$accept, method = c("pearson"))
-##############
-####Nortmality test
-####################
-qqnorm(learnability$Average)
-qqnorm(learnability$s2q2)
-qqnorm(learnability$s2q6)
-
-qqnorm(efficiency$Average)
-qqnorm(efficiency$s3q2)
-qqnorm(efficiency$s3q3)
-qqnorm(efficiency$s3q5)
-qqnorm(efficiency$s4q5)
-qqnorm(efficiency$s4q6)
-
-qqnorm(difficulty$Average)
-qqnorm(difficulty$s2q7)
-qqnorm(difficulty$s2q8)
-
-qqnorm(experienceP$Average)
-qqnorm(experienceP$s2q1)
-qqnorm(experienceP$s2q3)
-qqnorm(experienceP$s4q3)
-qqnorm(experienceP$s4q4)
-
-qqnorm(experienceS$Average)
-qqnorm(experienceS$s2q4)
-qqnorm(experienceS$s2q5)
-qqnorm(experienceS$s3q1)
-qqnorm(experienceS$s3q4)
-qqnorm(experienceS$s3q6)
-qqnorm(experienceS$s4q1)
-qqnorm(experienceS$s4q2)
-
-shapiro.test(learnability$Average)
-shapiro.test(learnability$s2q2)
-shapiro.test(learnability$s2q6)
-
-shapiro.test(efficiency$Average)
-shapiro.test(efficiency$s3q2)
-shapiro.test(efficiency$s3q3)
-shapiro.test(efficiency$s3q5)
-shapiro.test(efficiency$s4q5)
-shapiro.test(efficiency$s4q6)
-
-shapiro.test(difficulty$Average)
-shapiro.test(difficulty$s2q7)
-shapiro.test(difficulty$s2q8)
-
-shapiro.test(experienceP$Average)
-shapiro.test(experienceP$s2q1)
-shapiro.test(experienceP$s2q3)
-shapiro.test(experienceP$s4q3)
-shapiro.test(experienceP$s4q4)
-
-shapiro.test(experienceS$Average)
-shapiro.test(experienceS$s2q4)
-shapiro.test(experienceS$s2q5)
-shapiro.test(experienceS$s3q1)
-shapiro.test(experienceS$s3q4)
-shapiro.test(experienceS$s3q6)
-shapiro.test(experienceS$s4q1)
-shapiro.test(experienceS$s4q2)
 
 ##################
 ##Creat Chisquare p.value matrix###
